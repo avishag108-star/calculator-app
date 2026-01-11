@@ -58,4 +58,5 @@ class CalculatorApp:
         self.operand = None
         self._input_buffer = ""
         return self.current_value
-    #test
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
