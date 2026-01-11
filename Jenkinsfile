@@ -1,36 +1,31 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.9-slim'
+            args '-v /var/run/docker.sock:/var/run/docker.sock -u root'
+        }
+    }
 
     environment {
         AWS_ACCOUNT_ID = '992382545251'
         AWS_REGION = 'us-east-1'
         IMAGE_REPO_NAME = 'avishag/calculator'
-        PR_ID = "${env.CHANGE_ID ?: 'master'}"
-        IMAGE_TAG = "pr-${PR_ID}-${env.BUILD_NUMBER}"
+        IMAGE_TAG = "build-${env.BUILD_NUMBER}"
     }
 
     stages {
-        stage('Build Image') {
+        stage('Install & Test') {
             steps {
-                sh "docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG} ."
-            }
-        }
-
-        stage('Test') {
-            steps {
-                echo 'Running Tests directly on host...'
-                sh 'pip install -r requirements.txt --break-system-packages'
+                sh 'pip install -r requirements.txt'
                 sh 'python -m pytest'
             }
         }
 
-        stage('Push to ECR') {
-            when { changeRequest() }
+        stage('Build & Push') {
             steps {
-                script {
-                    sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-                    sh "docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
-                }
+                sh "docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG} ."
+                sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+                sh "docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
             }
         }
     }
