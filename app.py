@@ -58,3 +58,4 @@ class CalculatorApp:
         self.operand = None
         self._input_buffer = ""
         return self.current_value
+    #test
