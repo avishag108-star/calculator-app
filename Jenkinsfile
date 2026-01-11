@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:3.9-slim'
-            args '-v /var/run/docker.sock:/var/run/docker.sock -u root'
-        }
-    }
+    agent any
 
     environment {
         AWS_ACCOUNT_ID = '992382545251'
@@ -15,17 +10,29 @@ pipeline {
 
     stages {
         stage('Install & Test') {
+            agent {
+                docker { 
+                    image 'python:3.9-slim' 
+                }
+            }
             steps {
                 sh 'pip install -r requirements.txt'
                 sh 'python -m pytest'
             }
         }
 
-        stage('Build & Push') {
+        stage('Build Image') {
             steps {
                 sh "docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG} ."
-                sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-                sh "docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+            }
+        }
+
+        stage('Push to ECR') {
+            steps {
+                script {
+                    sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+                    sh "docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+                }
             }
         }
     }
