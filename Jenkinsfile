@@ -12,19 +12,14 @@ pipeline {
     stages {
         stage('Build Image') {
             steps {
-                echo 'Building Image on Host...'
-                
                 sh "docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG} ."
             }
         }
 
         stage('Test') {
-            agent { 
-                docker { image 'python:3.9-slim' } 
-            }
             steps {
-                echo 'Running Tests inside Container...'
-                sh 'pip install -r requirements.txt'
+                echo 'Running Tests directly on host...'
+                sh 'pip install -r requirements.txt --break-system-packages'
                 sh 'python -m pytest'
             }
         }
