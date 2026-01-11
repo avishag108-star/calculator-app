@@ -63,11 +63,10 @@ pipeline {
                         docker run -d --name calculator -p 80:5000 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}
                     "
                     """
-                }
+          }
             }
         }
-    }
-}
+
 stage('Health Check') {
             steps {
                 script {
