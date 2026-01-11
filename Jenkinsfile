@@ -8,7 +8,7 @@ pipeline {
       
         IMAGE_TAG = "build-${env.BUILD_NUMBER}"
        
-        PROD_SERVER_IP = 54.236.5.221
+        PROD_SERVER_IP = '54.236.5.221'
     }
 
     stages {
