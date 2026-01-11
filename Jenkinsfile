@@ -68,5 +68,19 @@ pipeline {
         }
     }
 }
+stage('Health Check') {
+            steps {
+                script {
+                    echo "Checking if the application is responding..."
+                                      sleep 5
+                    def response = sh(script: "curl -s -o /dev/null -w '%{http_code}' http://${PROD_SERVER_IP}", returnStdout: true).trim()
+                    
+                    if (response == "200") {
+                        echo "Health Check Passed! Response: 200 OK"
+                    } else {
+                        error "Health Check Failed! Server returned: ${response}"
+                    }
+                }
+            }
 
 
